@@ -1,0 +1,15 @@
+# 构建产物
+/bin/
+*.exe
+
+# 敏感配置（本地配置不入库，用 config.example.yaml 作为模板）
+config.yaml
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
