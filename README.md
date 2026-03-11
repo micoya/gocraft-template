@@ -2,10 +2,6 @@
 
 基于 [gocraft](https://github.com/micoya/gocraft) 框架的 Go 项目样板工程。
 
-## AI Boost
-
-你可以复制`docs/_boost`下的内容到例如`.cursor`等地方加速你的开发
-
 ## 技术栈
 
 | 层次 | 技术 |
