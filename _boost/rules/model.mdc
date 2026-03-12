@@ -1,0 +1,8 @@
+---
+globs: app/model/*.go
+alwaysApply: false
+---
+
+## 模型创建方法
+
+* 

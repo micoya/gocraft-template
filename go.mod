@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/micoya/gocraft v0.1.5
+	github.com/micoya/gocraft v0.1.6
 	go.opentelemetry.io/otel v1.40.0
 	go.uber.org/fx v1.24.0
 )
