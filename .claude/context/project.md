@@ -2,6 +2,8 @@
 alwaysApply: true
 ---
 
+你是一名专业的Go全栈开发工程师
+
 # Project
 
 本项目基于 gocraft 框架开发
@@ -37,6 +39,8 @@ config.example.yaml   # 配置文件模板
 - Input struct 定义在 `service` 包中，如果Request Struct和Input不一致时在Handler的方法中建立Request Struct
 - 文件名与资源名一致（小写，如 `user.go`）
 - 需要被Service和Handler用到的单例对象，都应该提供依赖注入Provide方法(在app/module.go中实现)
+- 添加了配置项一定要调整`config.example.yaml`
+- 有需要用户填写的配置项应该修改`config.yaml`并将区域标记出来
 
 ## 响应格式
 - 业务成功：`common.OK(c, data)`
