@@ -43,7 +43,7 @@ func MigrateFields() []any {
 
 - GORM模型需要必须声明column和用于migrate的信息, 必须实现`TableName()`方法, 避免框架内置逻辑判断名字
 - 隐私字段例如`password`等应当默认加入注解`json:"-"`
-- 每个新模型创建完都需要去``
+- 如果需要 AutoMigrate，在应用启动时传入模型实例（由 `cfx.CoreModule` 或自定义启动逻辑管理）
 
 ---
 
@@ -78,9 +78,9 @@ type OrderService struct {
     log *slog.Logger
 }
 
-func NewOrderService(dao *cdao.Dao, log *slog.Logger) *OrderService {
+func NewOrderService(dao *cdao.DAO, log *slog.Logger) *OrderService {
     return &OrderService{
-        db:  gormx.Must(*dao),
+        db:  gormx.Must(dao),
         log: log,
     }
 }
@@ -214,8 +214,6 @@ func APIModule() fx.Option {
     return fx.Options(
         ServiceModule(),
         fx.Provide(
-            provideOtelProvider,
-            provideServer,
             api.NewHelloHandler,
             api.NewOrderHandler, // 追加
         ),
