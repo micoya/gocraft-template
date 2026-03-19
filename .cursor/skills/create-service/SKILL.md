@@ -195,31 +195,30 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 
 ---
 
-## 步骤四：注册到 fx 模块
+## 步骤四：注册到 fx
 
-编辑 `app/module.go`，在 `ServiceModule()` 和 `APIModule()` 中追加新依赖：
+编辑 `cmd/apiserver/main.go`，在对应位置追加新依赖：
 
 ```go
-func ServiceModule() fx.Option {
-    return fx.Options(
-        InfraModule(),
-        fx.Provide(
-            service.NewHelloService,
-            service.NewOrderService, // 追加
-        ),
-    )
-}
+fx.New(
+    fx.WithLogger(cfx.LoggerProvider),
 
-func APIModule() fx.Option {
-    return fx.Options(
-        ServiceModule(),
-        fx.Provide(
-            api.NewHelloHandler,
-            api.NewOrderHandler, // 追加
-        ),
-        fx.Invoke(RegisterRoutes),
-    )
-}
+    cfx.CoreModule[struct{}](),
+    cfx.DAOModule[struct{}](),
+
+    fx.Provide(
+        service.NewHelloService,
+        service.NewOrderService, // 追加
+    ),
+
+    fx.Provide(/* *chttp.Server ... */),
+
+    fx.Provide(
+        api.NewHelloHandler,
+        api.NewOrderHandler, // 追加
+    ),
+    fx.Invoke(app.RegisterRoutes),
+).Run()
 ```
 
 ---
@@ -266,9 +265,9 @@ func RegisterRoutes(
 新增一个资源需要改动的文件：
 
 ```
-app/model/order.go      # 新建
-app/service/order.go    # 新建
-app/api/order.go        # 新建
-app/module.go           # 修改：ServiceModule + APIModule 追加 provide
-app/routes.go           # 修改：RegisterRoutes 追加参数 + 路由
+app/model/order.go           # 新建
+app/service/order.go         # 新建
+app/api/order.go             # 新建
+cmd/apiserver/main.go        # 修改：fx.Provide 追加 Service + Handler
+app/routes.go                # 修改：RegisterRoutes 追加参数 + 路由
 ```

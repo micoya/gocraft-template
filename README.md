@@ -9,7 +9,7 @@
 ```bash
 go install github.com/micoya/gocraft/cmd/gocraft@latest
 
-go craft new <my-project>
+gocraft new <my-project>
 ```
 
 ## AI开发支持
