@@ -3,7 +3,19 @@ name: use-cworker
 description: 使用 cworker 并发受控的后台任务 Worker 池，避免无限制创建 goroutine
 ---
 
-## 概述
+## 配置
+
+无独立配置块；并发度等在代码里 `cworker.WithConcurrency(...)` 指定。若需从 YAML 读取，可放在业务 **`app:`** 块并在工厂函数里使用。
+
+---
+
+## cfx / fx 注入
+
+无专用 `cfx.ProvideWorker`；在 **`app/module.go`** 编写 `provideWorkerPool(lc fx.Lifecycle, log *slog.Logger) *cworker.Pool` 并用 **`fx.Provide(provideWorkerPool)`** 注册，`OnStop` 里 `pool.Stop(ctx)`。
+
+---
+
+## 基本用法
 
 `cworker` 提供并发受控的后台任务池，解决 Go 中无限制创建 goroutine 导致资源耗尽的问题。
 

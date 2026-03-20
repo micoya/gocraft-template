@@ -14,6 +14,5 @@ gocraft new <my-project>
 
 ## AI开发支持
 
-模板内已内置基本的Rules和Skills
+模板内已内置.cursor的Rules和Skills
 
-仅复制 `_boost` 目录为 `.cursor` , `.trae`, `.claude` 等相应的IDE所需的目录配置

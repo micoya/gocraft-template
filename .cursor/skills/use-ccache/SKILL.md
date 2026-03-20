@@ -3,7 +3,26 @@ name: use-ccache
 description: 使用 ccache 多级缓存（Redis缓存、内存缓存、两级联合缓存）
 ---
 
-## 概述
+## 配置
+
+| 实现 | 需要增加的 YAML |
+|------|------------------|
+| `NewRedis` / `Layered` 的 L2 | `dao.redis`（至少 `default` 或你使用的实例名） |
+| 纯内存 `NewMemoryFromConfig` | 无（可不配 `dao`） |
+| 若用 `cdao/mcachex` 作底层 | `dao.mcache` |
+
+并在 `main` 中 **blank import** `github.com/micoya/gocraft/cdao/provider/redis`（使用 Redis 时）。
+
+---
+
+## cfx / fx 注入
+
+- **cfx**：无专用 `ProvideCache`；在 **`app/module.go`** 用 `fx.Provide` 注册工厂函数，在工厂里 `ccache.NewRedis` / `NewLayered` 等。
+- **前置**：`cmd/*/main.go` 已包含 `cfx.ProvideDAO[AppConfig]()`（使用 Redis 缓存时）。
+
+---
+
+## 基本用法
 
 `ccache` 提供统一的缓存抽象接口与三种实现：Redis、内存（ristretto）和两级联合缓存（L1 内存 + L2 Redis）。所有实现缓存值类型为 `string`，业务层自行 JSON 序列化/反序列化。
 

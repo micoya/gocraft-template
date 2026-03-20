@@ -3,11 +3,27 @@ name: use-dao
 description: 使用Redis, Gorm, MemoryCache, OpenAI, OSS, MongoDB, Elasticsearch, Kafka, RabbitMQ, HTTPClient
 ---
 
-## 使用方式
+## 配置
 
-1. 确保 `config.yaml` 已包含对应的配置(例如Redis需要`dao.redis`配置), 不知道什么配置可以查看`config`结构体的定义。如果这一步未完成应该通知用户先完成，可以直接告诉用户需要的东西以双方交互的东西完成配置。
-2. 引入 `github.com/micoya/gocraft/cdao/<Provider>` 包
-3. 确保`main`包中已引用对应的驱动 `github.com/micoya/gocraft/cdao/provider/<Provider>`
+在 `config.yaml`（或 `config.example.yaml` 对照）中增加 **`dao`** 下对应资源块；结构体定义见 `github.com/micoya/gocraft/config` 的 `DAOConfig` 及各 `*Config`。未配置的驱动不会初始化。
+
+---
+
+## cfx / fx 注入
+
+1. **`cmd/*/main.go`**：`cfx.ProvideDAO[AppConfig]()`（无业务扩展配置时用 `struct{}`）。
+2. **`main` 包** 按使用的资源 **blank import** 驱动，例如：
+   - `_ "github.com/micoya/gocraft/cdao/provider/database"`
+   - `_ "github.com/micoya/gocraft/cdao/provider/redis"`
+3. 业务层通过构造函数注入 `*cdao.DAO`，用各 `*x.Must(dao, name...)` 取客户端（见下文）。
+
+---
+
+## 基本用法
+
+1. 完成上节配置与驱动 import。
+2. 引入 `github.com/micoya/gocraft/cdao/<辅助包名>`（如 `gormx`、`redisx`）。
+3. 在 Service 构造函数中用 `gormx.Must(dao)`、`redisx.Must(dao)` 等获取具体客户端。
 
 ## 支持的Dao
 

@@ -3,9 +3,29 @@ name: use-fx-provide
 description: 为新建包（pkg/ 或 app/ 下的自定义包）添加 fx 依赖注入，包括如何编写 Provide 函数、在 app/module.go 中统一注册、以及 main.go 中只需调用 app.Module()。当用户提到"依赖注入"、"fx.Provide"、"注入新包"、"pkg 如何注入"时使用。
 ---
 
+## 配置
+
+- **基础设施**：由根目录 `config.yaml` / 环境变量提供；新增项同步改 `config.example.yaml`。
+- **业务扩展**：定义 `type AppConfig struct { ... }`，对应 YAML 顶层 **`app:`** 块；`cfx.ProvideConfig[AppConfig]()` 会映射到 `cfg.App`。
+
+---
+
+## cfx / fx 注入
+
+| 层级 | 职责 |
+|------|------|
+| **`cmd/*/main.go`** | `fx.WithLogger(cfx.LoggerProvider)` + 按需 `cfx.ProvideConfig` / `ProvideLogger` / `ProvideOtel` / `ProvideDAO` / `ProvideHTTPServer` / `ProvideLocker` / `ProvideCron` / `ProvideTemporal` / `ProvideUID*` 等；再 `app.Module()`；最后 `fx.Invoke`（路由、仅本进程逻辑）。 |
+| **`app/module.go`** | 仅 **`fx.Provide`** 业务侧：`NewXxxService`、`NewXxxHandler`、pkg 单例；复杂依赖写本地 `provideXxx(lc fx.Lifecycle, ...)`。 |
+
+**无**「全局再包一层」的 cfx：第三方或自写包一律通过 `app/module.go` 的 `fx.Provide` 接入。
+
+---
+
 # 为新包添加依赖注入
 
-## 核心约定
+## 基本用法（约定与步骤）
+
+### 核心约定
 
 - **`app/module.go`** — 所有业务层依赖的注册入口（Service、Handler、pkg 单例）
 - **`cmd/*/main.go`** — 只负责基础设施 + `app.Module()` + 各 cmd 独有的 Invoke（如路由挂载）
@@ -79,6 +99,8 @@ func Module() fx.Option {
 ```go
 // cmd/apiserver/main.go
 fx.New(
+    fx.WithLogger(cfx.LoggerProvider),
+
     cfx.ProvideConfig[AppConfig](),
     cfx.ProvideLogger[AppConfig](),
     cfx.ProvideOtel[AppConfig](),

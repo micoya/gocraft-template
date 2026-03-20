@@ -3,7 +3,19 @@ name: use-cpager
 description: 使用 cpager 分页工具，offset-based 分页参数解析与 GORM 集成
 ---
 
-## 概述
+## 配置
+
+无独立配置块；分页默认值（如每页 20、最大 100）由库内常量决定，无需 YAML。
+
+---
+
+## cfx / fx 注入
+
+无；在 Handler/Service 中直接使用 `cpager.New` / `cpager.Of` / `cpager.Paginate`。若 Service 需注入，仅在 **`app/module.go`** 照常 `fx.Provide(NewXxxService)` 即可，与 cfx 无关。
+
+---
+
+## 基本用法
 
 `cpager` 提供 offset-based 分页的参数解析、归一化和泛型结果类型，深度集成 GORM。
 

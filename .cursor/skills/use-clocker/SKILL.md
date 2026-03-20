@@ -3,7 +3,23 @@ name: use-clocker
 description: 使用 clocker 分布式锁，基于 Redis 实现互斥执行
 ---
 
-## 概述
+## 配置
+
+在 **`dao.redis`** 中配置要用于加锁的实例（常用 `default`，或与业务隔离的 `lock` 等）。参见项目 `config.example.yaml` 中 `dao.redis` 示例。
+
+---
+
+## cfx / fx 注入
+
+| 方式 | 说明 |
+|------|------|
+| `cfx.ProvideLocker()` | 注入 `*clocker.Locker`，内部固定为 `clocker.New(redisx.Must(dao))`，即 **`dao.redis.default`**。需已有 `cfx.ProvideDAO` 且配置默认 Redis。 |
+| 使用非 default 的 Redis | 不用 `ProvideLocker`；在 **`app/module.go`** 写 `fx.Provide(func(dao *cdao.DAO) *clocker.Locker { return clocker.New(redisx.Must(dao, "lock")) })` 等自定义工厂。 |
+| 与 `ccron` 分布式 | `cron.distributed: true` 时，`cfx.ProvideCron` 会可选注入 `*clocker.Locker`（见 use-ccron）；Locker 仍来自 `ProvideLocker` 或你的自定义 Provide。 |
+
+---
+
+## 基本用法
 
 `clocker` 提供基于 Redis 的分布式锁，适用于多实例部署时需要互斥执行的场景（库存扣减、分布式幂等、防重复任务等）。
 

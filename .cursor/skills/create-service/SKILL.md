@@ -1,6 +1,26 @@
 ---
-name: create-resource
-description:  创建 Model, Service, Handler, fx(依赖注入) 注册, 路由挂载
+name: create-service
+description: 创建 Model, Service, Handler, fx(依赖注入) 注册, 路由挂载
+---
+
+## 配置
+
+- 若新资源依赖 DB/Redis 等：在 **`config.yaml`** 补全 **`dao`** 对应段，并同步 **`config.example.yaml`**。
+- 无新基础设施：无需改配置。
+
+---
+
+## cfx / fx 注入
+
+- **`cmd/apiserver/main.go`**：一般不变；已包含 `cfx.ProvideDAO` 等则 Service 可直接注入 `*cdao.DAO`。
+- **`app/module.go`**：为新 `NewXxxService`、`NewXxxHandler` 增加 **`fx.Provide`**。
+
+---
+
+## 基本用法
+
+以下「步骤一」至「步骤五」为新增一条业务资源的固定流程。
+
 ---
 
 ## 说明
@@ -115,7 +135,7 @@ func (s *OrderService) GetOrder(ctx context.Context, id int64) (*model.Order, er
 ```
 
 **注意：**
-- 如果不需要数据库，可以注入 `*slog.Logger` 等其他依赖代替 `*cdao.Dao`
+- 如果不需要数据库，可以注入 `*slog.Logger` 等其他依赖代替 `*cdao.DAO`
 - 禁止在 service 层使用 `gin.Context` 的任何方法
 
 ---

@@ -3,7 +3,19 @@ name: use-cerror
 description: 使用 cerror 统一业务错误处理，结构化错误码与 HTTP 状态码映射
 ---
 
-## 概述
+## 配置
+
+无；业务自定义错误码在代码中定义（如 `app/common/response.go` 或模块内常量）。
+
+---
+
+## cfx / fx 注入
+
+无；`cerror` 为纯逻辑包。Handler/Service 直接 `import "github.com/micoya/gocraft/cerror"` 即可。
+
+---
+
+## 基本用法
 
 `cerror` 提供业务错误码体系，解决 Go 原生 `error` 接口缺乏结构化信息、HTTP 层无法自动映射状态码的问题。
 

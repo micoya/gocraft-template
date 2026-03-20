@@ -3,7 +3,34 @@ name: use-ccron
 description: 使用 ccron 定时任务调度器，支持分布式防重复执行
 ---
 
-## 概述
+## 配置
+
+在 **`config.yaml`** 增加 **`cron`** 块（可省略则用库默认时区等）：
+
+```yaml
+cron:
+  timezone: "Asia/Shanghai"
+  distributed: true    # 多实例只跑一份时开启
+  lock_redis: default  # 仅当你手写 Locker 用 redisx.Must(dao, name) 时与之一致；见下
+  lock_ttl: 5m         # 分布式锁 TTL，应略大于任务最长执行时间
+```
+
+`cfx.ProvideLocker()` 固定使用 **`dao.redis.default`**。若锁必须用其他实例名，请自写 `*clocker.Locker` 的 `fx.Provide`，不要用 `ProvideLocker`。
+
+---
+
+## cfx / fx 注入
+
+**`cmd/*/main.go`**：
+
+- `cfx.ProvideCron[AppConfig]()` — 注入 `*ccron.Scheduler`，生命周期内 Start/Stop。
+- `distributed: true` 时还需 **`cfx.ProvideLocker()`**（且 DAO 中有对应 Redis），或你提供的 `*clocker.Locker` 与 `ccron.WithLocker` 等价能力。
+
+**`app/module.go`**：`fx.Invoke(registerCronJobs)`，在 `registerCronJobs` 里对 `scheduler.Add(...)` 注册任务。
+
+---
+
+## 基本用法
 
 `ccron` 提供基于 `robfig/cron` 的定时任务调度器，支持 OTel 全链路追踪和分布式防重复执行（需配合 `clocker`）。
 

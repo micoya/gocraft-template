@@ -1,18 +1,43 @@
 ---
 name: use-pubsub
-description: 使用 cpubsub（基于 Redis Stream 的发布/订阅）
+description: 使用 cpubsub（Redis Stream / Kafka / RabbitMQ 发布订阅抽象）
 ---
 
-## 概述
+## 配置
 
-`cpubsub` 基于 **Redis Stream 消费组模式**实现发布/订阅，底层使用 `XADD` / `XREADGROUP` / `XACK`，天然支持持久化、消费组、消息重投递与 ACK。
+| 实现 | YAML |
+|------|------|
+| Redis Stream（`cpubsub/provider/redis`） | **`dao.redis`** |
+| Kafka（`cpubsub/provider/kafka`） | **`dao.kafka`** |
+| RabbitMQ（`cpubsub/provider/rabbitmq`） | **`dao.rabbitmq`** |
+
+详见 `config.example.yaml` 与 **use-dao** skill。
 
 ---
 
-## 前置条件
+## cfx / fx 注入
 
-1. `config.yaml` 中已配置 Redis（`dao.redis`）。如果这一步未完成应该通知用户先完成，可以直接告诉用户需要的东西以双方交互的东西完成配置。
-2. `main` 包中已引入 Redis DAO 驱动：`github.com/micoya/gocraft/cdao/provider/redis`
+1. **`cmd/*/main.go`**：`cfx.ProvideDAO[AppConfig]()`。
+2. **`main` 包** blank import 对应驱动：`_ "github.com/micoya/gocraft/cdao/provider/redis"`（或 `kafka` / `rabbitmq`）。
+3. **无** `cfx.ProvidePubSub`；在 **`app/module.go`** 用 `fx.Provide` 工厂组装 `cpubsub.PubSub`，或在 Service 构造函数内 `provider/redis.New(redisx.Must(dao))`。
+
+---
+
+## 基本用法（概念）
+
+### Redis Stream 实现
+
+`cpubsub` 的 Redis 实现基于 **Redis Stream 消费组**，底层使用 `XADD` / `XREADGROUP` / `XACK`，支持持久化、消费组、重投递与 ACK。
+
+另有 **Kafka、RabbitMQ** 实现，见 `github.com/micoya/gocraft/cpubsub/provider/kafka`、`.../rabbitmq`，配置与客户端取自对应 `dao` 块。
+
+---
+
+## 前置条件（Redis 版）
+
+1. 已配置 **`dao.redis`**。
+2. `main` 中已 **`_` import** `github.com/micoya/gocraft/cdao/provider/redis`。
+
 ---
 
 ## 核心类型
@@ -43,14 +68,14 @@ import (
 )
 
 // 基础创建（使用默认配置）
-func NewPubSub(dao *cdao.Dao) cpubsub.PubSub {
-    client := redisx.Must(*dao) // 使用默认 Redis 实例
+func NewPubSub(dao *cdao.DAO) cpubsub.PubSub {
+    client := redisx.Must(dao) // 使用默认 Redis 实例
     return cpubsubRedis.New(client)
 }
 
 // 携带选项创建
-func NewPubSub(dao *cdao.Dao) cpubsub.PubSub {
-    client := redisx.Must(*dao)
+func NewPubSub(dao *cdao.DAO) cpubsub.PubSub {
+    client := redisx.Must(dao)
     return cpubsubRedis.New(client,
         cpubsubRedis.WithPrefix("myapp:"),    // 自定义 Stream Key 前缀，默认 "channel:"
         cpubsubRedis.WithTTL(3*24*time.Hour), // 自定义 TTL，默认 7 天；0 表示永不过期
@@ -145,8 +170,8 @@ type OrderService struct {
     log *slog.Logger
 }
 
-func NewOrderService(dao *cdao.Dao, log *slog.Logger) *OrderService {
-    client := redisx.Must(*dao)
+func NewOrderService(dao *cdao.DAO, log *slog.Logger) *OrderService {
+    client := redisx.Must(dao)
     ps := cpubsubRedis.New(client, cpubsubRedis.WithPrefix("myapp:"))
     return &OrderService{ps: ps, log: log}
 }
