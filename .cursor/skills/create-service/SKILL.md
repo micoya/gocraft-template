@@ -43,7 +43,7 @@ func MigrateFields() []any {
 
 - GORM模型需要必须声明column和用于migrate的信息, 必须实现`TableName()`方法, 避免框架内置逻辑判断名字
 - 隐私字段例如`password`等应当默认加入注解`json:"-"`
-- 如果需要 AutoMigrate，在应用启动时传入模型实例（由 `cfx.CoreModule` 或自定义启动逻辑管理）
+- 如果需要 AutoMigrate，在应用启动时通过 `db.AutoMigrate(&Order{})` 手动执行，或封装进 `app/module.go` 的 `fx.Invoke` 中
 
 ---
 

@@ -4,12 +4,10 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/micoya/gocraft v0.2.1
+	github.com/micoya/gocraft v0.2.3
 	go.opentelemetry.io/otel v1.42.0
 	go.uber.org/fx v1.24.0
 )
-
-replace github.com/micoya/gocraft => ../gocraft
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect

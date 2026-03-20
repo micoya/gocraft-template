@@ -77,31 +77,30 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 ## 通过 fx lifecycle 集成（推荐）
 
+在 `app/module.go` 的 `Module()` 中注册 Worker Pool，fx OnStop 自动优雅关闭：
+
 ```go
 // app/module.go
-func provideWorkerPool(log *slog.Logger) *cworker.Pool {
-    return cworker.New(
+func provideWorkerPool(lc fx.Lifecycle, log *slog.Logger) *cworker.Pool {
+    pool := cworker.New(
         cworker.WithConcurrency(100),
         cworker.WithLogger(log),
     )
-}
-
-func registerWorkerPoolLifecycle(lc fx.Lifecycle, pool *cworker.Pool) {
     lc.Append(fx.Hook{
         OnStop: func(ctx context.Context) error {
-            return pool.Stop(ctx) // 优雅关闭，等待在途任务完成
+            return pool.Stop(ctx)
         },
     })
+    return pool
 }
 
-func ServiceModule() fx.Option {
+func Module() fx.Option {
     return fx.Options(
-        InfraModule(),
         fx.Provide(
             provideWorkerPool,
-            // ...其他 service
+            service.NewOrderService,
+            api.NewOrderHandler,
         ),
-        fx.Invoke(registerWorkerPoolLifecycle),
     )
 }
 ```

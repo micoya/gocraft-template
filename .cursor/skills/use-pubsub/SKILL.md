@@ -191,24 +191,22 @@ func (s *OrderService) ConsumeOrderCreated(ctx context.Context) error {
 
 ### 2. 通过 fx lifecycle 启动消费者
 
+在 `app/module.go` 的 `Module()` 中注册消费者生命周期：
+
 ```go
 // app/module.go
-import "go.uber.org/fx"
-
-func ServiceModule() fx.Option {
+func Module() fx.Option {
     return fx.Options(
-        InfraModule(),
         fx.Provide(
             service.NewOrderService,
         ),
-        // 注册消费者生命周期
         fx.Invoke(registerOrderConsumer),
     )
 }
 
 func registerOrderConsumer(lc fx.Lifecycle, svc *service.OrderService, log *slog.Logger) {
     lc.Append(fx.Hook{
-        OnStart: func(ctx context.Context) error {
+        OnStart: func(_ context.Context) error {
             go func() {
                 if err := svc.ConsumeOrderCreated(context.Background()); err != nil {
                     log.Error("order consumer stopped", slog.Any("error", err))

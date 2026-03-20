@@ -88,31 +88,53 @@ scheduler := ccron.New(opts...)
 
 ---
 
-## 通过 fx lifecycle 集成
+## 通过 fx 集成（推荐）
+
+`cfx.ProvideCron` 自动从 `config.yaml` 读取时区、分布式配置，并管理 Start/Stop 生命周期。
+分布式模式下还需同时注册 `cfx.ProvideLocker`（它会自动注入到 `ProvideCron`）。
+
+**`app/module.go`** — 注册任务（在 `fx.Invoke` 中）：
 
 ```go
 // app/module.go
-func registerScheduler(lc fx.Lifecycle, svc *service.OrderService, log *slog.Logger, dao *cdao.DAO) {
-    scheduler := ccron.New(
-        ccron.WithTimezone("Asia/Shanghai"),
-        ccron.WithLogger(log),
+func Module() fx.Option {
+    return fx.Options(
+        fx.Provide(service.NewOrderService),
+
+        // 注册定时任务（scheduler 和 locker 由 main.go 的 cfx.Provide* 提供）
+        fx.Invoke(registerCronJobs),
     )
+}
+
+func registerCronJobs(scheduler *ccron.Scheduler, svc *service.OrderService, log *slog.Logger) {
     scheduler.Add("清理过期订单", "0 0 2 * * *", func(ctx context.Context) {
         if err := svc.CleanExpired(ctx); err != nil {
             log.ErrorContext(ctx, "清理失败", slog.Any("error", err))
         }
     })
-
-    lc.Append(fx.Hook{
-        OnStart: func(ctx context.Context) error {
-            scheduler.Start()
-            return nil
-        },
-        OnStop: func(ctx context.Context) error {
-            return scheduler.Stop(ctx)
-        },
-    })
 }
+```
+
+**`cmd/apiserver/main.go`** — 注册基础设施：
+
+```go
+fx.New(
+    cfx.ProvideConfig[AppConfig](),
+    cfx.ProvideDAO[AppConfig](),
+    cfx.ProvideLocker(),        // 分布式模式需要，无分布式可省略
+    cfx.ProvideCron[AppConfig](), // 自动读取 cfg.Cron 配置
+    app.Module(),
+).Run()
+```
+
+**`config.yaml`** — 开启分布式模式：
+
+```yaml
+cron:
+  timezone: "Asia/Shanghai"
+  distributed: true   # true 时 cfx.ProvideCron 自动启用 Locker
+  lock_redis: default
+  lock_ttl: 5m
 ```
 
 ---
