@@ -41,6 +41,10 @@ config.example.yaml   # 配置文件模板
 - 需要被Service和Handler用到的单例对象，都应该提供依赖注入Provide方法(在app/module.go中实现)
 - 添加了配置项一定要调整`config.example.yaml`
 - 有需要用户填写的配置项应该修改`config.yaml`并将区域标记出来
+- 给前端、客户端使用（南北流量）的路由应注册到/api下面
+- 给东西流量（集群内部调用）的内部路由应注册到/internal-api下面
+- 东西流量默认无需任何鉴权
+- 接口不使用restful, 而是使用/版本/业务域/动作, 动作使用小写下划线
 
 ## 响应格式
 - 业务成功：`common.OK(c, data)`
