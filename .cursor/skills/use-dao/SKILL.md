@@ -1,6 +1,6 @@
 ---
 name: use-dao
-description: 使用Redis, Gorm, MemoryCache, OpenAI, OSS, MongoDB, Elasticsearch, Kafka, RabbitMQ, HTTPClient
+description: 使用Redis, Gorm, MemoryCache, OpenAI, OSS, MongoDB, Elasticsearch, Kafka, RabbitMQ, HTTPClient, TableStore, MNS
 ---
 
 ## 配置
@@ -301,3 +301,62 @@ dao:
 **备注**
 
 返回标准库 `*net/http.Client`，内置 OTel 追踪、重试（指数退避+抖动）、熔断器，业务代码无感知直接使用。重试策略：幂等方法（GET/HEAD/PUT/DELETE/OPTIONS）5xx 自动重试；POST 等非幂等方法仅在网络错误时重试。
+
+---
+
+### TableStore（阿里云表格存储）
+
+**使用包：**`github.com/micoya/gocraft/cdao/tablestorex`
+
+**需要引用驱动：**`github.com/micoya/gocraft/cdao/provider/tablestore`
+
+**使用方式:** `tablestorex.Must(*cdao.DAO, name...) *tablestore.TableStoreClient`
+
+**config.yaml 配置：**
+```yaml
+dao:
+  tablestore:
+    default:
+      endpoint: "https://instance-name.cn-hangzhou.ots.aliyuncs.com"
+      instance_name: "instance-name"
+      access_key_id: ""
+      access_key_secret: ""
+```
+
+**备注**
+
+返回的是 `github.com/aliyun/aliyun-tablestore-go-sdk/tablestore` 的 `*TableStoreClient`，内置 OTel HTTP 追踪
+
+---
+
+### MNS（阿里云消息服务）
+
+**使用包：**`github.com/micoya/gocraft/cdao/mnsx`
+
+**需要引用驱动：**`github.com/micoya/gocraft/cdao/provider/mns`
+
+**使用方式:** `mnsx.Must(*cdao.DAO, name...) ali_mns.MNSClient`
+
+**config.yaml 配置：**
+```yaml
+dao:
+  mns:
+    default:
+      endpoint: "http://1234567890123456.mns.cn-hangzhou.aliyuncs.com"
+      access_key_id: ""
+      access_key_secret: ""
+```
+
+**备注**
+
+返回的是 `github.com/aliyun/aliyun-mns-go-sdk` 的 `MNSClient` 接口，可用于创建队列/主题管理器：
+
+```go
+client := mnsx.Must(dao)
+
+// 队列管理
+queueMgr := ali_mns.NewMNSQueueManager(client)
+
+// 收发消息
+queue := ali_mns.NewMNSQueue("my-queue", client)
+```
