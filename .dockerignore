@@ -1,0 +1,41 @@
+# Git / 版本控制
+.git
+.gitignore
+.gitattributes
+
+# IDE / 编辑器
+.idea
+.vscode
+*.swp
+*.swo
+
+# Cursor
+.cursor
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 构建产物
+bin
+dist
+out
+*.exe
+/apiserver
+
+# 敏感或本地配置
+config.yaml
+.env
+.env.*
+
+# 测试产物
+coverage.out
+coverage.html
+*.test
+
+# 文档
+README.md
+
+# CI / 杂项
+.github
+.gitlab-ci.yml
