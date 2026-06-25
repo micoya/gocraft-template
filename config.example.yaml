@@ -293,6 +293,8 @@ http_server:
 # ============================================================
 # 分布式 ID（配合 cfx.ProvideUID*FromConfig）
 # 整个 uid 块省略表示不在配置里声明；snowflake_static 与 redis_snowflake 按业务二选一（对应不同 Provide 函数）。
+# Shortflake 不走 uid 配置块：它是 Redis 秒级序列短 ID，使用 cfx.ProvideUIDShortflake("default", opts...)
+# 或 cuid.NewShortflakeDAO(dao, "default", opts...) 显式指定 Redis 实例和选项。
 # ============================================================
 # uid:
 #   # 静态 Snowflake 节点 ID（0~1023，取决于 snowflake 库约定）
@@ -310,6 +312,14 @@ http_server:
 #     lease_ttl: 30s
 #     # 节点号上界（开区间），默认 1024 即合法节点 ∈ [0, 1023]
 #     max_node_exclusive: 1024
+#
+# Shortflake 使用说明：
+# - 依赖 dao.redis 中的实例，不需要 uid.shortflake 配置块。
+# - 默认 Redis key 前缀为 snowflake:sequence:，实际 key 为 prefix + businessKey + ":" + unixSecond。
+# - ID 结构为 32 位秒级时间差 + 20 位序列，默认 epoch 为 2024-01-01 00:00:00 UTC。
+# - 每个 businessKey 每秒最多生成 1,048,575 个序列；businessKey 不编码进 ID，全局唯一时所有调用方应使用同一个 businessKey。
+# - 常用代码：
+#   cfx.ProvideUIDShortflake("default", cuid.WithShortflakeKeyPrefix("app:shortflake:"))
 
 # ============================================================
 # Temporal（ctemporal）
